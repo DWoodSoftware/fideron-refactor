@@ -37,6 +37,7 @@ def test_init_creates_default_audit_scaffold(tmp_path, monkeypatch):
             "max_changed_lines": 800,
         },
     }
+    assert (tmp_path / "audits" / "history").is_dir()
 
 def test_init_does_not_overwrite_existing_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
