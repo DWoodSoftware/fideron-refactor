@@ -110,3 +110,48 @@ def test_init_with_explicit_default_values_marks_profile_custom(tmp_path, monkey
     config = json.loads(config_path.read_text(encoding="utf-8"))
 
     assert config["profile"] == "custom"
+
+def test_init_rejects_zero_max_diff_files(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "--init",
+            "--max-diff-files",
+            "0",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert not (tmp_path / "audits" / "config.json").exists()
+
+def test_init_rejects_zero_max_diff_lines(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "--init",
+            "--max-diff-lines",
+            "0",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert not (tmp_path / "audits" / "config.json").exists()
+
+def test_init_rejects_negative_diff_threshold(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(
+        app,
+        [
+            "--init",
+            "--max-diff-files",
+            "-1",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert not (tmp_path / "audits" / "config.json").exists()

@@ -24,11 +24,13 @@ def root(
     max_diff_files: int | None = typer.Option(
         None,
         "--max-diff-files",
+        min=1,
         help="Maximum changed files before branch drift is flagged.",
     ),
     max_diff_lines: int | None = typer.Option(
         None,
         "--max-diff-lines",
+        min=1,
         help="Maximum changed lines before branch drift is flagged.",
     ),
 ):
