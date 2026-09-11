@@ -15,29 +15,18 @@ def test_cli_help_is_available():
 def test_init_creates_default_audit_scaffold(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    config_path = audits_dir / "config.json"
+    existing_config = '{"profile": "custom"}'
+    config_path.write_text(existing_config, encoding="utf-8")
+
     result = runner.invoke(app, ["--init"])
 
-    config_path = tmp_path / "audits" / "config.json"
-
     assert result.exit_code == 0
-    assert (tmp_path / "audits").is_dir()
-    assert config_path.is_file()
-
-    config = json.loads(config_path.read_text(encoding="utf-8"))
-
-    assert config == {
-        "version": 1,
-        "profile": "default",
-        "base_branch": "main",
-        "audit": {
-            "history": True,
-        },
-        "branch_drift": {
-            "max_changed_files": 20,
-            "max_changed_lines": 800,
-        },
-    }
-    assert (tmp_path / "audits" / "history").is_dir()
+    assert config_path.read_text(encoding="utf-8") == existing_config
+    assert "Refactor is already initialised for this repository." in result.stdout
 
 def test_init_does_not_overwrite_existing_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)

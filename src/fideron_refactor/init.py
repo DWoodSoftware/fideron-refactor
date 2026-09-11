@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
 
+import typer
+
 DEFAULT_BASE_BRANCH = "main"
 DEFAULT_MAX_DIFF_FILES = 20
 DEFAULT_MAX_DIFF_LINES = 800
-
 
 def initialise_repo(
     base_branch=DEFAULT_BASE_BRANCH,
@@ -21,6 +22,7 @@ def initialise_repo(
     config_path = audits_dir / "config.json"
 
     if config_path.exists():
+        typer.echo("Refactor is already initialised for this repository.")
         return
 
     config = {
