@@ -3,15 +3,14 @@ from pathlib import Path
 
 import typer
 
-DEFAULT_BASE_BRANCH = "main"
-DEFAULT_MAX_DIFF_FILES = 20
-DEFAULT_MAX_DIFF_LINES = 800
+from fideron_refactor.config import DEFAULT_CONFIG
+
 
 def initialise_repo(
-    base_branch=DEFAULT_BASE_BRANCH,
-    max_diff_files=DEFAULT_MAX_DIFF_FILES,
-    max_diff_lines=DEFAULT_MAX_DIFF_LINES,
-    profile="default",
+    base_branch=DEFAULT_CONFIG["base_branch"],
+    max_diff_files=DEFAULT_CONFIG["branch_drift"]["max_changed_files"],
+    max_diff_lines=DEFAULT_CONFIG["branch_drift"]["max_changed_lines"],
+    profile=DEFAULT_CONFIG["profile"],
 ):
     audits_dir = Path.cwd() / "audits"
     audits_dir.mkdir(exist_ok=True)
@@ -26,11 +25,11 @@ def initialise_repo(
         return
 
     config = {
-        "version": 1,
+        "version": DEFAULT_CONFIG["version"],
         "profile": profile,
         "base_branch": base_branch,
         "audit": {
-            "history": True,
+            "history": DEFAULT_CONFIG["audit"]["history"],
         },
         "branch_drift": {
             "max_changed_files": max_diff_files,

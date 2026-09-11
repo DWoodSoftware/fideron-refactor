@@ -1,6 +1,6 @@
 import json
 
-from fideron_refactor.config import load_config
+from fideron_refactor.config import DEFAULT_CONFIG, load_config
 
 
 def test_load_config_reads_repository_config(tmp_path, monkeypatch):
@@ -31,3 +31,17 @@ def test_load_config_reads_repository_config(tmp_path, monkeypatch):
     config = load_config()
 
     assert config == expected_config
+
+def test_default_config_matches_repository_init_contract():
+    assert DEFAULT_CONFIG == {
+        "version": 1,
+        "profile": "default",
+        "base_branch": "main",
+        "audit": {
+            "history": True,
+        },
+        "branch_drift": {
+            "max_changed_files": 20,
+            "max_changed_lines": 800,
+        },
+    }
