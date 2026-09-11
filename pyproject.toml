@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fideron-refactor"
+version = "0.1.0"
+description = "Fideron repository refactoring and audit CLI"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.16,<1.0"
+]
+
+[project.scripts]
+refactor = "fideron_refactor.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fideron_refactor"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
