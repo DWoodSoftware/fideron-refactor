@@ -53,6 +53,21 @@ def load_config():
         raise ConfigError(
             "Missing required configuration field: branch_drift"
         )
+
+    if "history" not in config["audit"]:
+        raise ConfigError(
+            "Missing required configuration field: audit.history"
+        )
+
+    if "max_changed_files" not in config["branch_drift"]:
+        raise ConfigError(
+            "Missing required configuration field: branch_drift.max_changed_files"
+        )
+
+    if "max_changed_lines" not in config["branch_drift"]:
+        raise ConfigError(
+            "Missing required configuration field: branch_drift.max_changed_lines"
+        )
     
     if config.get("profile") == "default":
         comparible_config = {
