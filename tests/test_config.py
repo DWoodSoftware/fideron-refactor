@@ -95,3 +95,30 @@ def test_load_config_raises_config_error_for_invalid_json(tmp_path, monkeypatch)
 
     with pytest.raises(ConfigError, match="Invalid Refactor configuration"):
         load_config()
+
+def test_load_config_raises_config_error_when_profile_is_missing(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    config_path = audits_dir / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "base_branch": "main",
+                "audit": {
+                    "history": True,
+                },
+                "branch_drift": {
+                    "max_changed_files": 20,
+                    "max_changed_lines": 800,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError, match="Missing required configuration field: profile"):
+        load_config()

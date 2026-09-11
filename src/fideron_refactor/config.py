@@ -28,6 +28,11 @@ def load_config():
         raise ConfigError(
             "Invalid Refactor configuration"
         ) from exc
+
+    if "profile" not in config:
+        raise ConfigError(
+            "Missing required configuration field: profile"
+        )
     
     if config.get("profile") == "default":
         comparible_config = {
