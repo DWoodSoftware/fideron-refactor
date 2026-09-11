@@ -29,9 +29,29 @@ def load_config():
             "Invalid Refactor configuration"
         ) from exc
 
+    if "version" not in config:
+        raise ConfigError(
+            "Missing required configuration field: version"
+        )
+
     if "profile" not in config:
         raise ConfigError(
             "Missing required configuration field: profile"
+        )
+
+    if "base_branch" not in config:
+        raise ConfigError(
+            "Missing required configuration field: base_branch"
+        )
+
+    if "audit" not in config:
+        raise ConfigError(
+            "Missing required configuration field: audit"
+        )
+
+    if "branch_drift" not in config:
+        raise ConfigError(
+            "Missing required configuration field: branch_drift"
         )
     
     if config.get("profile") == "default":
