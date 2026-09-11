@@ -14,13 +14,21 @@ DEFAULT_CONFIG = {
     },
 }
 
+class ConfigError(Exception):
+    pass
+
 def load_config():
     config_path = Path.cwd() / "audits" / "config.json"
 
-    config = json.loads(
-        config_path.read_text(encoding="utf-8")
-    )
-
+    try:
+        config = json.loads(
+            config_path.read_text(encoding="utf-8")
+        )
+    except json.JSONDecodeError as exc:
+        raise ConfigError(
+            "Invalid Refactor configuration"
+        ) from exc
+    
     if config.get("profile") == "default":
         comparible_config = {
             key: value

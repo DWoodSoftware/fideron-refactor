@@ -1,6 +1,7 @@
 import json
 
-from fideron_refactor.config import DEFAULT_CONFIG, load_config
+import pytest
+from fideron_refactor.config import DEFAULT_CONFIG, ConfigError, load_config
 
 
 def test_load_config_reads_repository_config(tmp_path, monkeypatch):
@@ -79,3 +80,18 @@ def test_load_config_marks_modified_default_profile_as_custom(tmp_path, monkeypa
         config_path.read_text(encoding="utf-8")
     )
     assert persisted_config["profile"] == "custom"
+
+def test_load_config_raises_config_error_for_invalid_json(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    config_path = audits_dir / "config.json"
+    config_path.write_text(
+        '{"profile": "default"',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError, match="Invalid Refactor configuration"):
+        load_config()
