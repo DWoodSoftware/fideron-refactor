@@ -37,3 +37,18 @@ def test_init_creates_default_audit_scaffold(tmp_path, monkeypatch):
             "max_changed_lines": 800,
         },
     }
+
+def test_init_does_not_overwrite_existing_config(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    config_path = audits_dir / "config.json"
+    existing_config = '{"profile": "custom"}'
+    config_path.write_text(existing_config, encoding="utf-8")
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+    assert config_path.read_text(encoding="utf-8") == existing_config

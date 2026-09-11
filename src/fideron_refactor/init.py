@@ -19,6 +19,10 @@ def initialise_repo():
     audits_dir.mkdir(exist_ok=True)
 
     config_path = audits_dir / "config.json"
+
+    if config_path.exists():
+        return
+    
     config_path.write_text(
         json.dumps(DEFAULT_CONFIG, indent=2),
         encoding="utf-8",
