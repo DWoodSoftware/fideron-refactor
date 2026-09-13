@@ -163,3 +163,31 @@ def test_audit_repository_classifies_localhost_config_finding_type(
 
     assert finding["category"] == "ALREADY_CONFIGURED"
     assert finding["type"] == "localhost"
+
+def test_audit_repository_classifies_retry_config_finding_type(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    config_file = tmp_path / "config.yml"
+    config_file.write_text(
+        "retries: 3\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.discover_repository_files",
+        lambda: ["config.yml"],
+    )
+
+    findings = audit_repository()
+
+    finding = next(
+        finding
+        for finding in findings
+        if "retries" in finding["value"].lower()
+    )
+
+    assert finding["category"] == "ALREADY_CONFIGURED"
+    assert finding["type"] == "retry"
