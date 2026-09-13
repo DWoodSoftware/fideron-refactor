@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from fideron_refactor.finding_types import classify_finding_type
 from fideron_refactor.git import discover_repository_files
 
 
@@ -30,14 +31,6 @@ def classify_file_role(relative_path: str) -> str:
 
     return "PRODUCTION"
 
-def classify_config_finding_type(line: str) -> str:
-    lowered = line.lower()
-
-    if "localhost" in lowered or "127.0.0.1" in lowered:
-        return "localhost"
-
-    return "operational"
-
 def audit_repository():
     findings = []
 
@@ -63,7 +56,7 @@ def audit_repository():
                     findings.append(
                         {
                             "category": "ALREADY_CONFIGURED",
-                            "type": classify_config_finding_type(line),
+                            "type": classify_finding_type(line),
                             "value": line.strip(),
                             "reason": "Operational value already lives in a configuration surface.",
                             "path": relative_path,
