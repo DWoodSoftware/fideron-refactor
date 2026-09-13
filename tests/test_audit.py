@@ -135,3 +135,31 @@ def test_audit_repository_reports_config_finding_line_and_value(
         localhost_finding["value"]
         == 'service_url: "http://localhost:8080"'
     )
+
+def test_audit_repository_classifies_localhost_config_finding_type(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    config_file = tmp_path / "config.yml"
+    config_file.write_text(
+        'service_url: "http://localhost:8080"\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.discover_repository_files",
+        lambda: ["config.yml"],
+    )
+
+    findings = audit_repository()
+
+    finding = next(
+        finding
+        for finding in findings
+        if "localhost" in finding["value"].lower()
+    )
+
+    assert finding["category"] == "ALREADY_CONFIGURED"
+    assert finding["type"] == "localhost"
