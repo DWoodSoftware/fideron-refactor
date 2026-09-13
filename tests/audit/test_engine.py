@@ -1,4 +1,4 @@
-from fideron_refactor.audit.engine import audit_repository
+from fideron_refactor.audit import audit_repository
 
 
 def test_audit_repository_detects_localhost_literal(tmp_path, monkeypatch):
