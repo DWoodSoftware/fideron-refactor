@@ -1,9 +1,6 @@
 # findings.py
 
-CLEANUP_CATEGORIES = {
-    "EXTRACT",
-    "SECRET",
-}
+from fideron_refactor.finding_categories import FINDING_CATEGORIES
 
 CLEANUP_VALUE_HINTS = {
     "time.sleep(",
@@ -23,21 +20,27 @@ def is_cleanup_target(finding: dict) -> bool:
     value = finding.get("value", "").lower()
     reason = finding.get("reason", "").lower()
 
-    if category in {"REVIEW", "KEEP"}:
-        return False
+    category_definition = FINDING_CATEGORIES.get(category)
 
-    if category == "ALREADY_CONFIGURED":
-        return any(
-            marker in value
-            for marker in (
-                "* * * * *",
-                "localhost",
-                "127.0.0.1",
+    if category_definition:
+        cleanup_policy = category_definition["cleanup_policy"]
+
+        if cleanup_policy == "never":
+            return False
+
+        if cleanup_policy == "always":
+            return True
+
+        if cleanup_policy == "conditional":
+            return any(
+                marker in value
+                for marker in (
+                    "* * * * *",
+                    "localhost",
+                    "127.0.0.1",
+                )
             )
-        )
 
-    if category in CLEANUP_CATEGORIES:
-        return True
 
     if any(hint in value for hint in CLEANUP_VALUE_HINTS):
         return True
