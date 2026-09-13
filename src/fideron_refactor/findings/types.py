@@ -16,6 +16,12 @@ FINDING_TYPES = [
             r"\bretry\b",
         ],
     },
+    {
+        "name": "delay",
+        "patterns": [
+            r"\btime\.sleep\s*\(",
+        ],
+    },
 ]
 
 

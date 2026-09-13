@@ -195,3 +195,32 @@ def test_audit_repository_marks_production_localhost_as_extract(
         finding["value"]
         == 'SERVICE_URL = "http://localhost:8080"'
     )
+
+def test_audit_repository_marks_hardcoded_sleep_as_extract(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    source_file = tmp_path / "worker.py"
+    source_file.write_text(
+        "time.sleep(5)\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.engine.discover_repository_files",
+        lambda: ["worker.py"],
+    )
+
+    findings = audit_repository()
+
+    assert len(findings) == 1
+
+    finding = findings[0]
+
+    assert finding["category"] == "EXTRACT"
+    assert finding["path"] == "worker.py"
+    assert finding["line"] == 1
+    assert finding["value"] == "time.sleep(5)"
+    assert finding["type"] == "delay"

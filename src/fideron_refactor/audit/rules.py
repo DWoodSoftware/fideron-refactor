@@ -26,4 +26,10 @@ AUDIT_RULES = [
             "Operational value is hardcoded in production code."
         ),
     },
+    {
+        "role": "PRODUCTION",
+        "pattern": r"(?i)\btime\.sleep\s*\(\s*\d+(?:\.\d+)?\s*\)",
+        "category": "EXTRACT",
+        "reason": "Operational delay is hardcoded in production code.",
+    },
 ]
