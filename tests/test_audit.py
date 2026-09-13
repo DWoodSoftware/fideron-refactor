@@ -163,3 +163,35 @@ def test_audit_repository_classifies_localhost_config_finding_type(
 
     assert finding["category"] == "ALREADY_CONFIGURED"
     assert finding["type"] == "localhost"
+
+def test_audit_repository_marks_production_localhost_as_extract(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    source_file = tmp_path / "service.py"
+    source_file.write_text(
+        'SERVICE_URL = "http://localhost:8080"\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.discover_repository_files",
+        lambda: ["service.py"],
+    )
+
+    findings = audit_repository()
+
+    assert len(findings) == 1
+
+    finding = findings[0]
+
+    assert finding["category"] == "EXTRACT"
+    assert finding["type"] == "localhost"
+    assert finding["path"] == "service.py"
+    assert finding["line"] == 1
+    assert (
+        finding["value"]
+        == 'SERVICE_URL = "http://localhost:8080"'
+    )

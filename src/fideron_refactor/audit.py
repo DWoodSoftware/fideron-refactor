@@ -1,9 +1,38 @@
 import re
 from pathlib import Path
 
+from fideron_refactor.audit_rules import AUDIT_RULES
 from fideron_refactor.finding_types import classify_finding_type
 from fideron_refactor.git import discover_repository_files
 
+
+def apply_audit_rule(
+    *,
+    rule: dict,
+    content: str,
+    relative_path: str,
+) -> list[dict]:
+    findings = []
+
+    for line_number, line in enumerate(
+        content.splitlines(),
+        start=1,
+    ):
+        if not re.search(rule["pattern"], line):
+            continue
+
+        findings.append(
+            {
+                "category": rule["category"],
+                "type": classify_finding_type(line),
+                "value": line.strip(),
+                "reason": rule["reason"],
+                "path": relative_path,
+                "line": line_number,
+            }
+        )
+
+    return findings
 
 def classify_file_role(relative_path: str) -> str:
     path = relative_path.replace("\\", "/")
@@ -44,24 +73,16 @@ def audit_repository():
 
         role = classify_file_role(relative_path)
 
-        if role == "CONFIG":
-            for line_number, line in enumerate(
-                content.splitlines(),
-                start=1,
-            ):
-                if re.search(
-                    r"(?i)(https?://|jdbc:|localhost|127\.0\.0\.1|schedule|port|database|db_|poll|interval|timeout|retries|retry|path|lookback)",
-                    line,
-                ):
-                    findings.append(
-                        {
-                            "category": "ALREADY_CONFIGURED",
-                            "type": classify_finding_type(line),
-                            "value": line.strip(),
-                            "reason": "Operational value already lives in a configuration surface.",
-                            "path": relative_path,
-                            "line": line_number,
-                        }
-                    )
+        for rule in AUDIT_RULES:
+            if rule["role"] != role:
+                continue
+
+            findings.extend(
+                apply_audit_rule(
+                    rule=rule,
+                    content=content,
+                    relative_path=relative_path,
+                )
+            )
 
     return findings
