@@ -18,12 +18,16 @@ class ConfigError(Exception):
     pass
 
 def load_config():
-    config_path = Path.cwd() / "audits" / "config.json"
+    config_path = Path.cwd() / "refactor.json"
 
     try:
         config = json.loads(
             config_path.read_text(encoding="utf-8")
         )
+    except FileNotFoundError as exc:
+        raise ConfigError(
+            "Refactor configuration not found"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise ConfigError(
             "Invalid Refactor configuration"

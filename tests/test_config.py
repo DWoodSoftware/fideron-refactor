@@ -1,14 +1,12 @@
 import json
 
 import pytest
+
 from fideron_refactor.config import DEFAULT_CONFIG, ConfigError, load_config
 
 
-def test_load_config_reads_repository_config(tmp_path, monkeypatch):
+def test_load_config_reads_manifest_from_repository_root(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
 
     expected_config = {
         "version": 1,
@@ -23,7 +21,7 @@ def test_load_config_reads_repository_config(tmp_path, monkeypatch):
         },
     }
 
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(expected_config),
         encoding="utf-8",
@@ -50,9 +48,6 @@ def test_default_config_matches_repository_init_contract():
 def test_load_config_marks_modified_default_profile_as_custom(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
     modified_config = {
         "version": 1,
         "profile": "default",
@@ -66,7 +61,7 @@ def test_load_config_marks_modified_default_profile_as_custom(tmp_path, monkeypa
         },
     }
 
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(modified_config),
         encoding="utf-8",
@@ -84,10 +79,7 @@ def test_load_config_marks_modified_default_profile_as_custom(tmp_path, monkeypa
 def test_load_config_raises_config_error_for_invalid_json(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         '{"profile": "default"',
         encoding="utf-8",
@@ -99,10 +91,7 @@ def test_load_config_raises_config_error_for_invalid_json(tmp_path, monkeypatch)
 def test_load_config_raises_config_error_when_profile_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -126,10 +115,7 @@ def test_load_config_raises_config_error_when_profile_is_missing(tmp_path, monke
 def test_load_config_raises_config_error_when_version_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -156,10 +142,7 @@ def test_load_config_raises_config_error_when_version_is_missing(tmp_path, monke
 def test_load_config_raises_config_error_when_base_branch_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -186,10 +169,7 @@ def test_load_config_raises_config_error_when_base_branch_is_missing(tmp_path, m
 def test_load_config_raises_config_error_when_audit_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -214,10 +194,7 @@ def test_load_config_raises_config_error_when_audit_is_missing(tmp_path, monkeyp
 def test_load_config_raises_config_error_when_branch_drift_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -241,10 +218,7 @@ def test_load_config_raises_config_error_when_branch_drift_is_missing(tmp_path, 
 def test_load_config_raises_config_error_when_audit_history_is_missing(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -273,10 +247,7 @@ def test_load_config_raises_config_error_when_max_changed_files_is_missing(
 ):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -306,10 +277,7 @@ def test_load_config_raises_config_error_when_max_changed_lines_is_missing(
 ):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
+    config_path = tmp_path / "refactor.json"
     config_path.write_text(
         json.dumps(
             {
@@ -331,4 +299,36 @@ def test_load_config_raises_config_error_when_max_changed_lines_is_missing(
         ConfigError,
         match="Missing required configuration field: branch_drift.max_changed_lines",
     ):
+        load_config()
+
+
+def test_load_config_does_not_read_legacy_nested_config(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    legacy_config = audits_dir / "config.json"
+    legacy_config.write_text(
+        """
+        {
+          "version": 1,
+          "profile": "default",
+          "base_branch": "main",
+          "audit": {
+            "history": true
+          },
+          "branch_drift": {
+            "max_changed_files": 20,
+            "max_changed_lines": 800
+          }
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigError):
         load_config()
