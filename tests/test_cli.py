@@ -1,8 +1,9 @@
 import json
 
+from typer.testing import CliRunner
+
 from fideron_refactor.cli import app
 from fideron_refactor.findings import is_cleanup_target
-from typer.testing import CliRunner
 
 runner = CliRunner()
 
@@ -203,3 +204,56 @@ def test_keep_finding_is_not_cleanup_target():
     }
 
     assert is_cleanup_target(finding) is False
+
+def test_init_adds_audits_directory_to_gitignore(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+
+    gitignore = tmp_path / ".gitignore"
+
+    assert gitignore.exists()
+    assert "/audits/" in gitignore.read_text(encoding="utf-8")
+
+def test_init_preserves_existing_gitignore_and_adds_audits_directory(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_text(
+        ".venv/\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+
+    contents = gitignore.read_text(encoding="utf-8")
+
+    assert ".venv/" in contents
+    assert "/audits/" in contents
+
+def test_init_does_not_duplicate_audits_gitignore_entry(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_text(
+        "/audits/\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+
+    contents = gitignore.read_text(encoding="utf-8")
+
+    assert contents.splitlines().count("/audits/") == 1
