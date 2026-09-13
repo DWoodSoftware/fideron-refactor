@@ -20,6 +20,29 @@ FINDING_TYPES = [
         "name": "delay",
         "patterns": [
             r"\btime\.sleep\s*\(",
+            r"\bretry_delay\b",
+            r"\bbackoff_delay\b",
+        ],
+    },
+    {
+        "name": "timeout",
+        "patterns": [
+            r"\btimeout\b",
+            r"\brequest_timeout\b",
+        ],
+    },
+    {
+        "name": "interval",
+        "patterns": [
+            r"\binterval\b",
+            r"\bpoll_interval\b",
+        ],
+    },
+    {
+        "name": "duration",
+        "patterns": [
+            r"\btimedelta\s*\(",
+            r"\bttl\b",
         ],
     },
 ]

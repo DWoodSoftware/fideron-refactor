@@ -32,4 +32,23 @@ AUDIT_RULES = [
         "category": "EXTRACT",
         "reason": "Operational delay is hardcoded in production code.",
     },
+    {
+        "role": "PRODUCTION",
+        "pattern": (
+            r"(?i)"
+            r"\b("
+            r"[A-Z_]*TIMEOUT|"
+            r"[A-Z_]*INTERVAL|"
+            r"[A-Z_]*DELAY|"
+            r"[A-Z_]*TTL"
+            r")\b"
+            r"\s*=\s*"
+            r"("
+            r"\d+(?:\.\d+)?|"
+            r"timedelta\s*\([^)]*\)"
+            r")"
+        ),
+        "category": "EXTRACT",
+        "reason": "Operational timing value is hardcoded in production code.",
+    },
 ]
