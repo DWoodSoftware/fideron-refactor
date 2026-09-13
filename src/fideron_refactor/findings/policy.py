@@ -1,6 +1,6 @@
 # findings.py
 
-from fideron_refactor.finding_categories import FINDING_CATEGORIES
+from fideron_refactor.findings.categories import FINDING_CATEGORIES
 
 CLEANUP_VALUE_HINTS = {
     "time.sleep(",

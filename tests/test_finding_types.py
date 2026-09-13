@@ -1,6 +1,6 @@
 import pytest
 
-from fideron_refactor.finding_types import (
+from fideron_refactor.findings.types import (
     FINDING_TYPES,
     classify_finding_type,
 )

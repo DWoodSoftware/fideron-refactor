@@ -1,6 +1,6 @@
 import subprocess
 
-from fideron_refactor.git import discover_repository_files
+from fideron_refactor.repository.discovery import discover_repository_files
 
 
 def test_discover_repository_files_returns_tracked_files_and_skips_ignored_paths(

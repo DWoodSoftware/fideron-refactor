@@ -1,4 +1,4 @@
-from fideron_refactor.audit import audit_repository
+from fideron_refactor.audit.engine import audit_repository
 
 
 def test_audit_repository_detects_localhost_literal(tmp_path, monkeypatch):
@@ -11,7 +11,7 @@ def test_audit_repository_detects_localhost_literal(tmp_path, monkeypatch):
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml"],
     )
 
@@ -42,7 +42,7 @@ def test_audit_repository_only_scans_discovered_repository_files(
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml"],
     )
 
@@ -77,7 +77,7 @@ def test_audit_repository_classifies_operational_config_values(
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml", "service.py"],
     )
 
@@ -117,7 +117,7 @@ def test_audit_repository_reports_config_finding_line_and_value(
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml"],
     )
 
@@ -149,7 +149,7 @@ def test_audit_repository_classifies_localhost_config_finding_type(
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml"],
     )
 
@@ -177,7 +177,7 @@ def test_audit_repository_marks_production_localhost_as_extract(
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["service.py"],
     )
 

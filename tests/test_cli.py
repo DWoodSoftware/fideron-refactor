@@ -153,7 +153,7 @@ def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
     )
 
     monkeypatch.setattr(
-        "fideron_refactor.audit.discover_repository_files",
+        "fideron_refactor.audit.engine.discover_repository_files",
         lambda: ["config.yml"],
     )
 
