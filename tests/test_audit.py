@@ -99,3 +99,39 @@ def test_audit_repository_classifies_operational_config_values(
         finding["path"] == "service.py"
         for finding in configured_findings
     )
+
+def test_audit_repository_reports_config_finding_line_and_value(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    config_file = tmp_path / "config.yml"
+    config_file.write_text(
+        (
+            'service_name: "example"\n'
+            'service_url: "http://localhost:8080"\n'
+            'retries: 3\n'
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.discover_repository_files",
+        lambda: ["config.yml"],
+    )
+
+    findings = audit_repository()
+
+    localhost_finding = next(
+        finding
+        for finding in findings
+        if "localhost" in finding["value"].lower()
+    )
+
+    assert localhost_finding["path"] == "config.yml"
+    assert localhost_finding["line"] == 2
+    assert (
+        localhost_finding["value"]
+        == 'service_url: "http://localhost:8080"'
+    )

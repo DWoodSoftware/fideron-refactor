@@ -43,20 +43,23 @@ def audit_repository():
 
         role = classify_file_role(relative_path)
 
-        if (
-            role == "CONFIG"
-            and re.search(
-                r"(?i)(https?://|jdbc:|localhost|127\.0\.0\.1|schedule|port|database|db_|poll|interval|timeout|retries|retry|path|lookback)",
-                content,
-            )
-        ):
-            findings.append(
-                {
-                    "category": "ALREADY_CONFIGURED",
-                    "value": content.strip(),
-                    "reason": "Operational value already lives in a configuration surface.",
-                    "path": relative_path,
-                }
-            )
+        if role == "CONFIG":
+            for line_number, line in enumerate(
+                content.splitlines(),
+                start=1,
+            ):
+                if re.search(
+                    r"(?i)(https?://|jdbc:|localhost|127\.0\.0\.1|schedule|port|database|db_|poll|interval|timeout|retries|retry|path|lookback)",
+                    line,
+                ):
+                    findings.append(
+                        {
+                            "category": "ALREADY_CONFIGURED",
+                            "value": line.strip(),
+                            "reason": "Operational value already lives in a configuration surface.",
+                            "path": relative_path,
+                            "line": line_number,
+                        }
+                    )
 
     return findings
