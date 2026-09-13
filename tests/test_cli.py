@@ -146,7 +146,7 @@ def test_init_rejects_negative_diff_threshold(tmp_path, monkeypatch):
 def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    source_file = tmp_path / "example.py"
+    source_file = tmp_path / "config.yml"
     source_file.write_text(
         'API_URL = "http://localhost:8080"\n',
         encoding="utf-8",
@@ -154,7 +154,7 @@ def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
 
     monkeypatch.setattr(
         "fideron_refactor.audit.discover_repository_files",
-        lambda: ["example.py"],
+        lambda: ["config.yml"],
     )
 
     result = runner.invoke(app, ["cleanup"])
