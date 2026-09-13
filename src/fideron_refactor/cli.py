@@ -2,6 +2,8 @@ from pathlib import Path
 
 import typer
 
+from fideron_refactor.audit import audit_repository
+from fideron_refactor.findings import is_cleanup_target
 from fideron_refactor.init import initialise_repo
 
 app = typer.Typer(
@@ -51,6 +53,20 @@ def root(
             profile="custom" if custom_profile else "default",
         )
 
+@app.command()
+def cleanup():
+    findings = audit_repository()
+
+    cleanup_targets = [
+        finding
+        for finding in findings
+        if is_cleanup_target(finding)
+    ]
+
+    for finding in cleanup_targets:
+        typer.echo(
+            f"CLEANUP: {finding['value']} - {finding['reason']}"
+        )
 
 def main():
     app()

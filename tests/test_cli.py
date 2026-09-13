@@ -1,6 +1,7 @@
 import json
 
 from fideron_refactor.cli import app
+from fideron_refactor.findings import is_cleanup_target
 from typer.testing import CliRunner
 
 runner = CliRunner()
@@ -144,3 +145,56 @@ def test_init_rejects_negative_diff_threshold(tmp_path, monkeypatch):
 
     assert result.exit_code != 0
     assert not (tmp_path / "audits" / "config.json").exists()
+
+def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    source_file = tmp_path / "example.py"
+    source_file.write_text(
+        'API_URL = "http://localhost:8080"\n',
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["cleanup"])
+
+    assert result.exit_code == 0
+    assert "CLEANUP" in result.stdout
+    assert "localhost" in result.stdout.lower()
+
+def test_secret_finding_is_cleanup_target():
+    finding = {
+        "category": "SECRET",
+        "value": "api_key = abc123",
+        "reason": "Possible secret",
+    }
+
+    assert is_cleanup_target(finding) is True
+
+def test_extract_finding_is_cleanup_target():
+    finding = {
+        "category": "EXTRACT",
+        "value": "scheduler.json",
+        "reason": "Hardcoded configuration",
+    }
+
+    assert is_cleanup_target(finding) is True
+
+
+def test_review_finding_is_not_cleanup_target():
+    finding = {
+        "category": "REVIEW",
+        "value": "possible refactor",
+        "reason": "Needs review",
+    }
+
+    assert is_cleanup_target(finding) is False
+
+
+def test_keep_finding_is_not_cleanup_target():
+    finding = {
+        "category": "KEEP",
+        "value": "intentional constant",
+        "reason": "Expected repository value",
+    }
+
+    assert is_cleanup_target(finding) is False
