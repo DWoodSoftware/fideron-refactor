@@ -155,6 +155,11 @@ def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
+    monkeypatch.setattr(
+        "fideron_refactor.audit.discover_repository_files",
+        lambda: ["example.py"],
+    )
+
     result = runner.invoke(app, ["cleanup"])
 
     assert result.exit_code == 0
