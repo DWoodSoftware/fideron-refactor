@@ -3,6 +3,7 @@ import json
 from typer.testing import CliRunner
 
 from fideron_refactor.cli import app
+from fideron_refactor.config import ConfigError
 from fideron_refactor.findings import is_cleanup_target
 
 runner = CliRunner()
@@ -17,18 +18,13 @@ def test_cli_help_is_available():
 def test_init_creates_default_audit_scaffold(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
-    audits_dir = tmp_path / "audits"
-    audits_dir.mkdir()
-
-    config_path = audits_dir / "config.json"
-    existing_config = '{"profile": "custom"}'
-    config_path.write_text(existing_config, encoding="utf-8")
-
     result = runner.invoke(app, ["--init"])
 
     assert result.exit_code == 0
-    assert config_path.read_text(encoding="utf-8") == existing_config
-    assert "Refactor is already initialised for this repository." in result.stdout
+
+    assert (tmp_path / "refactor.json").exists()
+    assert (tmp_path / "audits").is_dir()
+    assert (tmp_path / "audits" / "history").is_dir()
 
 def test_init_does_not_overwrite_existing_config(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
@@ -63,7 +59,7 @@ def test_init_with_custom_arguments_writes_custom_config(tmp_path, monkeypatch):
 
     assert result.exit_code == 0
 
-    config_path = tmp_path / "audits" / "config.json"
+    config_path = tmp_path / "refactor.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
 
     assert config == {
@@ -97,7 +93,7 @@ def test_init_with_explicit_default_values_marks_profile_custom(tmp_path, monkey
 
     assert result.exit_code == 0
 
-    config_path = tmp_path / "audits" / "config.json"
+    config_path = tmp_path / "refactor.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
 
     assert config["profile"] == "custom"
@@ -257,3 +253,71 @@ def test_init_does_not_duplicate_audits_gitignore_entry(
     contents = gitignore.read_text(encoding="utf-8")
 
     assert contents.splitlines().count("/audits/") == 1
+
+def test_init_initialises_when_audits_directory_exists_without_manifest(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    audits_dir = tmp_path / "audits"
+    audits_dir.mkdir()
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+    assert (tmp_path / "refactor.json").exists()
+
+def test_init_treats_valid_manifest_as_already_initialised(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    manifest = tmp_path / "refactor.json"
+    manifest.write_text(
+        """
+        {
+          "version": 1,
+          "profile": "default",
+          "base_branch": "main",
+          "audit": {
+            "history": true
+          },
+          "branch_drift": {
+            "max_changed_files": 20,
+            "max_changed_lines": 800
+          }
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code == 0
+    assert (
+        "Refactor is already initialised for this repository."
+        in result.stdout
+    )
+
+def test_init_rejects_invalid_existing_manifest(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    manifest = tmp_path / "refactor.json"
+    manifest.write_text(
+        '{"version": 1}',
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["--init"])
+
+    assert result.exit_code != 0
+    assert isinstance(result.exception, ConfigError)
+    assert (
+        str(result.exception)
+        == "Missing required configuration field: profile"
+    )

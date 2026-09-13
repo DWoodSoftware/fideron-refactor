@@ -3,7 +3,11 @@ from pathlib import Path
 
 import typer
 
-from fideron_refactor.config import DEFAULT_CONFIG
+from fideron_refactor.config import (
+    DEFAULT_CONFIG,
+    ConfigError,
+    load_config,
+)
 
 
 def ensure_gitignore_entry(directory: str) -> None:
@@ -36,17 +40,13 @@ def initialise_repo(
     max_diff_lines=DEFAULT_CONFIG["branch_drift"]["max_changed_lines"],
     profile=DEFAULT_CONFIG["profile"],
 ):
-    audits_dir = Path.cwd() / "audits"
-    audits_dir.mkdir(exist_ok=True)
 
-    history_dir = audits_dir / "history"
-    history_dir.mkdir(exist_ok=True)
-
-    config_path = audits_dir / "config.json"
-
-    ensure_gitignore_entry("audits")
-
-    if config_path.exists():
+    try:
+        load_config()
+    except ConfigError as exc:
+        if str(exc) != "Refactor configuration not found":
+            raise
+    else:
         typer.echo("Refactor is already initialised for this repository.")
         return
 
@@ -63,7 +63,17 @@ def initialise_repo(
         },
     }
 
+    config_path = Path.cwd() / "refactor.json"
+
     config_path.write_text(
         json.dumps(config, indent=2),
         encoding="utf-8",
     )
+
+    audits_dir = Path.cwd() / "audits"
+    audits_dir.mkdir(exist_ok=True)
+
+    history_dir = audits_dir / "history"
+    history_dir.mkdir(exist_ok=True)
+
+    ensure_gitignore_entry("audits")
