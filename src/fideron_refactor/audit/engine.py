@@ -36,10 +36,14 @@ def apply_audit_rule(
     return findings
 
 
-def audit_repository():
+def audit_repository(
+    ignore_paths: list[str] | None = None,
+) -> list[dict]:
     findings = []
 
-    for relative_path in discover_repository_files():
+    for relative_path in discover_repository_files(
+        ignore_paths=ignore_paths,
+    ):
         path = Path.cwd() / relative_path
 
         try:

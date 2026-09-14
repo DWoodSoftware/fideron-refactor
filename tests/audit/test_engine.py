@@ -14,7 +14,7 @@ def test_audit_repository_detects_localhost_literal(tmp_path, monkeypatch):
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml"],
+        lambda ignore_paths=None: ["config.yml"],
     )
 
     findings = audit_repository()
@@ -45,7 +45,7 @@ def test_audit_repository_only_scans_discovered_repository_files(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml"],
+        lambda ignore_paths=None: ["config.yml"],
     )
 
     findings = audit_repository()
@@ -80,7 +80,7 @@ def test_audit_repository_classifies_operational_config_values(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml", "service.py"],
+        lambda ignore_paths=None: ["config.yml", "service.py"],
     )
 
     findings = audit_repository()
@@ -120,7 +120,7 @@ def test_audit_repository_reports_config_finding_line_and_value(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml"],
+        lambda ignore_paths=None: ["config.yml"],
     )
 
     findings = audit_repository()
@@ -152,7 +152,7 @@ def test_audit_repository_classifies_localhost_config_finding_type(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml"],
+        lambda ignore_paths=None: ["config.yml"],
     )
 
     findings = audit_repository()
@@ -180,7 +180,7 @@ def test_audit_repository_marks_production_localhost_as_extract(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["service.py"],
+        lambda ignore_paths=None: ["service.py"],
     )
 
     findings = audit_repository()
@@ -212,7 +212,7 @@ def test_audit_repository_marks_hardcoded_sleep_as_extract(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["worker.py"],
+        lambda ignore_paths=None: ["worker.py"],
     )
 
     findings = audit_repository()
@@ -254,7 +254,7 @@ def test_audit_repository_extracts_hardcoded_operational_timing_values(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["worker.py"],
+        lambda ignore_paths=None: ["worker.py"],
     )
 
     findings = audit_repository()
@@ -293,7 +293,7 @@ def test_audit_repository_extracts_hardcoded_operational_paths(
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["worker.py"],
+        lambda ignore_paths=None: ["worker.py"],
     )
 
     findings = audit_repository()
@@ -346,3 +346,39 @@ def test_audit_repository_detects_hardcoded_secrets(
     assert finding["line"] == 1
     assert finding["value"] == source
 
+def test_audit_repository_respects_configured_ignore_paths(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    ignored_dir = tmp_path / "ignored"
+    ignored_dir.mkdir()
+
+    ignored_file = ignored_dir / "service.py"
+    ignored_file.write_text(
+        'SERVICE_URL = "http://localhost:8080"\n',
+        encoding="utf-8",
+    )
+
+    included_file = tmp_path / "service.py"
+    included_file.write_text(
+        'SERVICE_URL = "http://localhost:9000"\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.engine.discover_repository_files",
+        lambda ignore_paths=None: (
+            ["service.py"]
+            if ignore_paths == ["ignored/"]
+            else ["service.py", "ignored/service.py"]
+        ),
+    )
+
+    findings = audit_repository(
+        ignore_paths=["ignored/"],
+    )
+
+    assert len(findings) == 1
+    assert findings[0]["path"] == "service.py"

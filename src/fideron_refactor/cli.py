@@ -1,8 +1,11 @@
+import json
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
 from fideron_refactor.audit import audit_repository
+from fideron_refactor.config import load_config
 from fideron_refactor.findings import is_cleanup_target
 from fideron_refactor.init import initialise_repo
 
@@ -13,28 +16,49 @@ app = typer.Typer(
 
 @app.callback()
 def root(
-    init: bool = typer.Option(
-        False,
-        "--init",
-        help="Initialise Refactor for the current repository.",
-    ),
-    base: str | None = typer.Option(
-        None,
-        "--base",
-        help="Base branch used for repository comparison.",
-    ),
-    max_diff_files: int | None = typer.Option(
-        None,
-        "--max-diff-files",
-        min=1,
-        help="Maximum changed files before branch drift is flagged.",
-    ),
-    max_diff_lines: int | None = typer.Option(
-        None,
-        "--max-diff-lines",
-        min=1,
-        help="Maximum changed lines before branch drift is flagged.",
-    ),
+    init: Annotated[
+        bool,
+        typer.Option(
+            "--init",
+            help="Initialise Refactor for the current repository.",
+        ),
+    ] = False,
+    ignore: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--ignore",
+            help="Add a repository-relative path to the audit ignore list.",
+        ),
+    ] = None,
+    base: Annotated[
+        str | None,
+        typer.Option(
+            "--base",
+            help="Base branch used for repository comparison.",
+        ),
+    ] = None,
+    max_diff_files: Annotated[
+        int | None,
+        typer.Option(
+            "--max-diff-files",
+            min=1,
+            help=(
+                "Maximum changed files before branch drift "
+                "is flagged."
+            ),
+        ),
+    ] = None,
+    max_diff_lines: Annotated[
+        int | None,
+        typer.Option(
+            "--max-diff-lines",
+            min=1,
+            help=(
+                "Maximum changed lines before branch drift "
+                "is flagged."
+            ),
+        ),
+    ] = None,
 ):
     if init:
         custom_profile = any(
@@ -44,7 +68,7 @@ def root(
                 max_diff_files,
                 max_diff_lines,
             )
-        )
+        ) or bool(ignore)
 
         initialise_repo(
             base_branch=base or "main",
@@ -52,6 +76,10 @@ def root(
             max_diff_lines=max_diff_lines or 800,
             profile="custom" if custom_profile else "default",
         )
+
+    if ignore:
+        for ignore_path in ignore:
+            add_ignore_path(ignore_path)
 
 @app.command()
 def cleanup():
@@ -67,6 +95,27 @@ def cleanup():
         typer.echo(
             f"CLEANUP: {finding['value']} - {finding['reason']}"
         )
+
+def add_ignore_path(ignore_path: str) -> None:
+    config = load_config()
+
+    normalised_path = (
+        ignore_path
+        .replace("\\", "/")
+        .removeprefix("./")
+        .rstrip("/")
+    )
+
+    if normalised_path not in config["ignore"]:
+        config["ignore"].append(normalised_path)
+
+    config["profile"] = "custom"
+
+    config_path = Path.cwd() / "refactor.json"
+    config_path.write_text(
+        json.dumps(config, indent=2),
+        encoding="utf-8",
+    )
 
 def main():
     app()

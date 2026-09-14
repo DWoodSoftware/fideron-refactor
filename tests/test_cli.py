@@ -154,7 +154,7 @@ def test_cleanup_reports_repository_cleanup_findings(tmp_path, monkeypatch):
 
     monkeypatch.setattr(
         "fideron_refactor.audit.engine.discover_repository_files",
-        lambda: ["config.yml"],
+        lambda ignore_paths=None: ["config.yml"],
     )
 
     result = runner.invoke(app, ["cleanup"])
@@ -321,3 +321,48 @@ def test_init_rejects_invalid_existing_manifest(
         str(result.exception)
         == "Missing required configuration field: profile"
     )
+
+def test_ignore_adds_path_to_existing_config(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "refactor.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "profile": "default",
+                "base_branch": "main",
+                "ignore": [],
+                "audit": {
+                    "history": True,
+                },
+                "branch_drift": {
+                    "max_changed_files": 20,
+                    "max_changed_lines": 800,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "--ignore",
+            "tests/",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    config = json.loads(
+        (tmp_path / "refactor.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert config["ignore"] == [
+        "tests",
+    ]

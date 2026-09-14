@@ -1,10 +1,12 @@
 import json
 from pathlib import Path
 
+
 DEFAULT_CONFIG = {
     "version": 1,
     "profile": "default",
     "base_branch": "main",
+    "ignore": [],
     "audit": {
         "history": True,
     },
@@ -14,8 +16,10 @@ DEFAULT_CONFIG = {
     },
 }
 
+
 class ConfigError(Exception):
     pass
+
 
 def load_config():
     config_path = Path.cwd() / "refactor.json"
@@ -65,28 +69,40 @@ def load_config():
 
     if "max_changed_files" not in config["branch_drift"]:
         raise ConfigError(
-            "Missing required configuration field: branch_drift.max_changed_files"
+            "Missing required configuration field: "
+            "branch_drift.max_changed_files"
         )
 
     if "max_changed_lines" not in config["branch_drift"]:
         raise ConfigError(
-            "Missing required configuration field: branch_drift.max_changed_lines"
+            "Missing required configuration field: "
+            "branch_drift.max_changed_lines"
         )
-    
+
+    config.setdefault("ignore", [])
+
+    if not isinstance(config["ignore"], list) or not all(
+        isinstance(path, str)
+        for path in config["ignore"]
+    ):
+        raise ConfigError(
+            "Invalid Refactor ignore configuration"
+        )
+
     if config.get("profile") == "default":
-        comparible_config = {
+        comparable_config = {
             key: value
             for key, value in config.items()
             if key != "profile"
         }
 
-        comparible_default = {
+        comparable_default = {
             key: value
             for key, value in DEFAULT_CONFIG.items()
             if key != "profile"
         }
 
-        if comparible_config != comparible_default:
+        if comparable_config != comparable_default:
             config["profile"] = "custom"
 
             config_path.write_text(

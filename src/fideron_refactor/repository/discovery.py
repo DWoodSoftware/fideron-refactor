@@ -38,13 +38,24 @@ IGNORED_PATH_FRAGMENTS = {
 }
 
 
-def discover_repository_files() -> list[str]:
+def discover_repository_files(
+    ignore_paths: list[str] | None = None,
+) -> list[str]:
     result = subprocess.run(
         ["git", "ls-files"],
         check=True,
         capture_output=True,
         text=True,
     )
+
+    ignore_paths = ignore_paths or []
+
+    normalised_ignore_paths = [
+        ignore_path.replace("\\", "/")
+        .removeprefix("./")
+        .rstrip("/")
+        for ignore_path in ignore_paths
+    ]
 
     files = []
 
@@ -54,6 +65,15 @@ def discover_repository_files() -> list[str]:
         if any(
             fragment in normalised
             for fragment in IGNORED_PATH_FRAGMENTS
+        ):
+            continue
+
+        if any(
+            relative_path.replace("\\", "/") == ignore_path
+            or relative_path.replace("\\", "/").startswith(
+                ignore_path + "/"
+            )
+            for ignore_path in normalised_ignore_paths
         ):
             continue
 

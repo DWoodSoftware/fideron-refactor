@@ -12,6 +12,7 @@ def test_load_config_reads_manifest_from_repository_root(tmp_path, monkeypatch):
         "version": 1,
         "profile": "custom",
         "base_branch": "develop",
+        "ignore": [],
         "audit": {
             "history": True,
         },
@@ -36,6 +37,7 @@ def test_default_config_matches_repository_init_contract():
         "version": 1,
         "profile": "default",
         "base_branch": "main",
+        "ignore": [],
         "audit": {
             "history": True,
         },
@@ -52,6 +54,7 @@ def test_load_config_marks_modified_default_profile_as_custom(tmp_path, monkeypa
         "version": 1,
         "profile": "default",
         "base_branch": "develop",
+        "ignore": [],
         "audit": {
             "history": True,
         },
@@ -148,6 +151,7 @@ def test_load_config_raises_config_error_when_base_branch_is_missing(tmp_path, m
             {
                 "version": 1,
                 "profile": "default",
+                "ignore": [],
                 "audit": {
                     "history": True,
                 },
@@ -331,4 +335,98 @@ def test_load_config_does_not_read_legacy_nested_config(
     )
 
     with pytest.raises(ConfigError):
+        load_config()
+
+def test_load_config_defaults_ignore_to_empty_list(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "refactor.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "profile": "default",
+                "base_branch": "main",
+                "audit": {
+                    "history": True,
+                },
+                "branch_drift": {
+                    "max_changed_files": 20,
+                    "max_changed_lines": 800,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    config = load_config()
+
+    assert config["ignore"] == []
+
+def test_load_config_reads_ignore_paths(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "refactor.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "profile": "custom",
+                "base_branch": "main",
+                "ignore": [
+                    "tests/",
+                    "configs/",
+                ],
+                "audit": {
+                    "history": True,
+                },
+                "branch_drift": {
+                    "max_changed_files": 20,
+                    "max_changed_lines": 800,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    config = load_config()
+
+    assert config["ignore"] == [
+        "tests/",
+        "configs/",
+    ]
+
+def test_load_config_rejects_invalid_ignore_configuration(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "refactor.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "profile": "custom",
+                "base_branch": "main",
+                "ignore": "tests/",
+                "audit": {
+                    "history": True,
+                },
+                "branch_drift": {
+                    "max_changed_files": 20,
+                    "max_changed_lines": 800,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigError,
+        match="Invalid Refactor ignore configuration",
+    ):
         load_config()
