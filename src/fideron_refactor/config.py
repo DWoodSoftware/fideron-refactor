@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 DEFAULT_CONFIG = {
     "version": 1,
     "profile": "default",
@@ -16,6 +15,20 @@ DEFAULT_CONFIG = {
     },
 }
 
+REQUIRED_CONFIG_FIELDS = (
+    "version",
+    "profile",
+    "base_branch",
+    "audit",
+    "branch_drift",
+)
+
+REQUIRED_NESTED_FIELDS = (
+    ("audit", "history"),
+    ("branch_drift", "max_changed_files"),
+    ("branch_drift", "max_changed_lines"),
+)
+
 
 class ConfigError(Exception):
     pass
@@ -23,9 +36,17 @@ class ConfigError(Exception):
 
 def load_config():
     config_path = Path.cwd() / "refactor.json"
+    config = _read_config(config_path)
 
+    _validate_required_fields(config)
+    _validate_ignore(config)
+    _reconcile_profile(config, config_path)
+
+    return config
+
+def _read_config(config_path: Path) -> dict:
     try:
-        config = json.loads(
+        return json.loads(
             config_path.read_text(encoding="utf-8")
         )
     except FileNotFoundError as exc:
@@ -37,48 +58,21 @@ def load_config():
             "Invalid Refactor configuration"
         ) from exc
 
-    if "version" not in config:
-        raise ConfigError(
-            "Missing required configuration field: version"
-        )
+def _validate_required_fields(config: dict) -> None:
+    for field in REQUIRED_CONFIG_FIELDS:
+        if field not in config:
+            raise ConfigError(
+                f"Missing required configuration field: {field}"
+            )
 
-    if "profile" not in config:
-        raise ConfigError(
-            "Missing required configuration field: profile"
-        )
+    for parent, field in REQUIRED_NESTED_FIELDS:
+        if field not in config[parent]:
+            raise ConfigError(
+                "Missing required configuration field: "
+                f"{parent}.{field}"
+            )
 
-    if "base_branch" not in config:
-        raise ConfigError(
-            "Missing required configuration field: base_branch"
-        )
-
-    if "audit" not in config:
-        raise ConfigError(
-            "Missing required configuration field: audit"
-        )
-
-    if "branch_drift" not in config:
-        raise ConfigError(
-            "Missing required configuration field: branch_drift"
-        )
-
-    if "history" not in config["audit"]:
-        raise ConfigError(
-            "Missing required configuration field: audit.history"
-        )
-
-    if "max_changed_files" not in config["branch_drift"]:
-        raise ConfigError(
-            "Missing required configuration field: "
-            "branch_drift.max_changed_files"
-        )
-
-    if "max_changed_lines" not in config["branch_drift"]:
-        raise ConfigError(
-            "Missing required configuration field: "
-            "branch_drift.max_changed_lines"
-        )
-
+def _validate_ignore(config: dict) -> None:
     config.setdefault("ignore", [])
 
     if not isinstance(config["ignore"], list) or not all(
@@ -89,25 +83,26 @@ def load_config():
             "Invalid Refactor ignore configuration"
         )
 
-    if config.get("profile") == "default":
-        comparable_config = {
-            key: value
-            for key, value in config.items()
-            if key != "profile"
-        }
+def _reconcile_profile(
+    config: dict,
+    config_path: Path,
+) -> None:
+    if config.get("profile") != "default":
+        return
 
-        comparable_default = {
-            key: value
-            for key, value in DEFAULT_CONFIG.items()
-            if key != "profile"
-        }
+    if _without_profile(config) == _without_profile(DEFAULT_CONFIG):
+        return
 
-        if comparable_config != comparable_default:
-            config["profile"] = "custom"
+    config["profile"] = "custom"
 
-            config_path.write_text(
-                json.dumps(config, indent=2),
-                encoding="utf-8",
-            )
+    config_path.write_text(
+        json.dumps(config, indent=2),
+        encoding="utf-8",
+    )
 
-    return config
+def _without_profile(config: dict) -> dict:
+    return {
+        key: value
+        for key, value in config.items()
+        if key != "profile"
+    }
