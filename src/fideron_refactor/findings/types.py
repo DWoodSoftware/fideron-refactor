@@ -54,6 +54,15 @@ FINDING_TYPES = [
             r"\benv_path\b",
         ],
     },
+    {
+        "name": "secret",
+        "patterns": [
+            r"\bapi_key\b",
+            r"\bsecret_key\b",
+            r"\bpassword\b",
+            r"\baccess_token\b",
+        ],
+    },
 ]
 
 

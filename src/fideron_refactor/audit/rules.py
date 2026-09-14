@@ -67,4 +67,20 @@ AUDIT_RULES = [
         "category": "EXTRACT",
         "reason": "Operational path is hardcoded in production code.",
     },
+    {
+        "role": "PRODUCTION",
+        "pattern": (
+            r"(?i)"
+            r"\b("
+            r"API_KEY|"
+            r"SECRET_KEY|"
+            r"PASSWORD|"
+            r"ACCESS_TOKEN"
+            r")\b"
+            r"\s*=\s*"
+            r"[\"'][^\"']+[\"']"
+        ),
+        "category": "SECRET",
+        "reason": "Potential secret is hardcoded in production code.",
+    },
 ]

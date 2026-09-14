@@ -1,7 +1,6 @@
 import subprocess
 from pathlib import Path
 
-
 IGNORED_EXTENSIONS = {
     ".png",
     ".jpg",

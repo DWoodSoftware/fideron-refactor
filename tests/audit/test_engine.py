@@ -307,3 +307,42 @@ def test_audit_repository_extracts_hardcoded_operational_paths(
     assert finding["path"] == "worker.py"
     assert finding["line"] == 1
     assert finding["value"] == source
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        'API_KEY = "super-secret-key"',
+        'SECRET_KEY = "super-secret-key"',
+        'PASSWORD = "hunter2"',
+        'ACCESS_TOKEN = "abc123token"',
+    ],
+)
+def test_audit_repository_detects_hardcoded_secrets(
+    tmp_path,
+    monkeypatch,
+    source,
+):
+    monkeypatch.chdir(tmp_path)
+
+    source_file = tmp_path / "service.py"
+    source_file.write_text(
+        f"{source}\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.engine.discover_repository_files",
+        lambda ignore_paths=None: ["service.py"],
+    )
+
+    findings = audit_repository()
+
+    assert len(findings) == 1
+
+    finding = findings[0]
+
+    assert finding["category"] == "SECRET"
+    assert finding["path"] == "service.py"
+    assert finding["line"] == 1
+    assert finding["value"] == source
+
