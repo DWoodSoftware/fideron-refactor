@@ -227,6 +227,7 @@ def test_audit_repository_marks_hardcoded_sleep_as_extract(
     assert finding["value"] == "time.sleep(5)"
     assert finding["type"] == "delay"
 
+
 @pytest.mark.parametrize(
     ("source", "expected_type"),
     [
@@ -264,6 +265,45 @@ def test_audit_repository_extracts_hardcoded_operational_timing_values(
 
     assert finding["category"] == "EXTRACT"
     assert finding["type"] == expected_type
+    assert finding["path"] == "worker.py"
+    assert finding["line"] == 1
+    assert finding["value"] == source
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        'CONFIG_PATH = "./config.yaml"',
+        'SCHEDULER_PATH = "./scheduler.json"',
+        'TOKEN_PATH = "./token.json"',
+        'ENV_PATH = ".env"',
+    ],
+)
+def test_audit_repository_extracts_hardcoded_operational_paths(
+    tmp_path,
+    monkeypatch,
+    source,
+):
+    monkeypatch.chdir(tmp_path)
+
+    source_file = tmp_path / "worker.py"
+    source_file.write_text(
+        f"{source}\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "fideron_refactor.audit.engine.discover_repository_files",
+        lambda: ["worker.py"],
+    )
+
+    findings = audit_repository()
+
+    assert len(findings) == 1
+
+    finding = findings[0]
+
+    assert finding["category"] == "EXTRACT"
+    assert finding["type"] == "path"
     assert finding["path"] == "worker.py"
     assert finding["line"] == 1
     assert finding["value"] == source

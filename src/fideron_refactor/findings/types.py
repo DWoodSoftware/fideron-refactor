@@ -45,6 +45,15 @@ FINDING_TYPES = [
             r"\bttl\b",
         ],
     },
+    {
+        "name": "path",
+        "patterns": [
+            r"\bconfig_path\b",
+            r"\bscheduler_path\b",
+            r"\btoken_path\b",
+            r"\benv_path\b",
+        ],
+    },
 ]
 
 

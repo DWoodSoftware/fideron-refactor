@@ -51,4 +51,20 @@ AUDIT_RULES = [
         "category": "EXTRACT",
         "reason": "Operational timing value is hardcoded in production code.",
     },
+    {
+        "role": "PRODUCTION",
+        "pattern": (
+            r"(?i)"
+            r"\b("
+            r"CONFIG_PATH|"
+            r"SCHEDULER_PATH|"
+            r"TOKEN_PATH|"
+            r"ENV_PATH"
+            r")\b"
+            r"\s*=\s*"
+            r"[\"'][^\"']+[\"']"
+        ),
+        "category": "EXTRACT",
+        "reason": "Operational path is hardcoded in production code.",
+    },
 ]
